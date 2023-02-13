@@ -1,0 +1,108 @@
+version: "3"
+
+services:
+  backend:
+    container_name: metafox-web-backend
+    image: bitnami/nginx
+    restart: always
+    volumes:
+      - backend_files:/app:rw
+      - ./vhost-backend-nginx.conf:/opt/bitnami/nginx/conf/server_blocks/app.conf
+      #- ./certs:/opt/bitnami/nginx/conf/bitnami/certs
+    ports:
+      - "8081:8080"
+    networks:
+      - metafox-app-tier
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+
+  php-fpm:
+    image: foxsystem/metafox-fpm:latest
+    container_name: metafox-php-fpm
+    restart: always
+    volumes:
+      - backend_files:/app
+
+    depends_on:
+      - "database"
+      - "redis"
+      - "rabbitmq"
+    networks:
+      - metafox-app-tier
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+  queue-worker:
+    image: foxsystem/metafox-fpm:latest
+    container_name: metafox-queue-worker
+    restart: always
+    volumes:
+      - backend_files:/app
+      - ./supervisord.conf:/etc/supervisor/supervisord.conf
+    depends_on:
+      - "database"
+      - "redis"
+      - "rabbitmq"
+    networks:
+      - metafox-app-tier
+    command: [ "supervisord", "-c", "/etc/supervisor/supervisord.conf" ]
+  redis:
+    container_name: metafox-cache-redis
+    image: bitnami/redis:7.0.12
+    restart: unless-stopped
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+    networks:
+      - metafox-app-tier
+
+  rabbitmq:
+    container_name: metafox-queue-rabbitmq
+    image: rabbitmq:3-management
+    restart: unless-stopped
+    volumes:
+      - ${PWD}/data/queue:/bitnami
+    networks:
+      - metafox-app-tier
+
+  database:
+    image: foxsystem/postgres:13.2
+    container_name: metafox-db-postgres
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: "${MFOX_DAT_PW}"
+      POSTGRES_USER: "${MFOX_DAT_USR}"
+      POSTGRES_DB: "${MFOX_DAT_DBNAME}"
+      POSTGRES_MAX_CONNECTIONS: 300
+      POSTGRES_SHARED_BUFFERS: 256MB
+    volumes:
+      - ${PWD}/data/postgres:/var/lib/postgresql
+    ports:
+      - "5432:5432"
+    networks:
+      - metafox-app-tier
+
+  agent:
+    container_name: newrelic-infra
+    image: foxsystem/newrelic-infra:host
+    cap_add:
+      - SYS_PTRACE
+    network_mode: host
+    pid: host
+    privileged: true
+    volumes:
+      - "/:/host:ro"
+      - "/var/run/docker.sock:/var/run/docker.sock"
+    restart: unless-stopped
+
+networks:
+  metafox-app-tier:
+    driver: bridge
+
+volumes:
+  backend_files:
+    driver: local
+    driver_opts:
+      type: "none"
+      o: "bind"
+      device: ${PWD}/backend

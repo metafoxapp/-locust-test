@@ -1,0 +1,17 @@
+version: '3'
+
+networks:
+  locust:
+    driver: bridge
+
+services:
+  master:
+    image: foxsystem/locust:latest
+    restart: always
+    build: .
+    ports:
+      - "8089:8089"
+    volumes:
+      - ./:/home/locust
+    networks:
+      - locust
