@@ -84,7 +84,15 @@ User spend time is 5 and 15 seconds between each step
 
 ## Results
 
-### Test API with user stories
+### Stage 00 - No Optimize
 
-- [v5.1.3 - before optimize](/apm-results/v5.1.3-stage-00.md)
+- [Metrics](/apm-results/v5.1.3-stage-00.md)
 
+### Stage 01 - Apply Preload
+
+In this stages
+
+- Support command `php artisan preload:gen` to update preload.php from opcache status scripts.
+- Optimize Docker Image with smaller size and extensions. [Docker Image](https://hub.docker.com/layers/foxsystem/metafox-fpm/prod/images/sha256-720d836b0ceb614173b03ae08cdef4c1e110d1ca2b4064057035a8557e595223?context=repo)
+- [Implement Opcache Preloading](https://www.php.net/manual/en/opcache.preloading.php)
+- [Metrics](/apm-results/v5.1.3-stage-01.md)
