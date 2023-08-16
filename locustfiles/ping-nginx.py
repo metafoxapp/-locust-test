@@ -1,8 +1,8 @@
-from locust import HttpUser, between, task
+from locust import HttpUser, between, task, constant
 
 
 class PingNginx(HttpUser):
-    wait_time = between(1, 3)
+    wait_time = between(3, 5)
 
     @task(1)
     def ping(self):

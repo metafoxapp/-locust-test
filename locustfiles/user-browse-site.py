@@ -1,13 +1,13 @@
 from datetime import datetime, timedelta
 
-from locust import HttpUser, between, task
+from locust import HttpUser, between, task, constant
 
 from common.auth import pick_random_user, authenticate
 from common.config import fake
 
 
 class LoggedUserBrowseSite(HttpUser):
-    wait_time = between(3, 15)
+    wait_time = between(3, 5)
     user = pick_random_user()
 
     def context(self):
@@ -362,10 +362,10 @@ class LoggedUserBrowseSite(HttpUser):
         self.client.get('/api/v1/account/invisible')
         self.client.get('/api/v1/payment-gateway/configuration')
         self.client.get('/api/v1/user/account/name-form')
+        self.client.get('/api/v1/core/form/user.account.edit_phone_number')
         self.client.get('/api/v1/user/account/email-form')
         self.client.get('/api/v1/user/account/username-form')
         self.client.get('/api/v1/user/account/password-form')
-        self.client.get('/api/v1/user/account/timezone-form')
         self.client.get('/api/v1/user/account/currency-form')
 
     @task(1)
